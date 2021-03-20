@@ -15,18 +15,23 @@ import json
 
 df_url = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations.csv'
 df = pd.read_csv(df_url).dropna(subset = ['location'])
+df=df.drop('iso_code', axis=1)
 
 df_location = df['location'].sort_values().unique()
-opt_location = [{'label': x, 'value': x} for x in df_location]
+opt_location = [{'label':x, 'value':x} for x in df_location]
 # Discrete Colors in Python
 # https://plotly.com/python/discrete-color/
 #col_location = {x: px.colors.qualitative.G10[i] for i,x in enumerate(df_location)}
-nrows=len(df.date)
-min_date = df['date'].iloc[0]
-max_date = df['date'].iloc[-1]
-#print(nrows)
-selected_dates = {min_date, df['date'].iloc[math.floor(nrows/5)], df['date'].iloc[math.floor(nrows*3/10)], df['date'].iloc[math.floor(nrows*2/5)], df['date'].iloc[math.floor(nrows/2)], df['date'].iloc[math.floor(nrows*3/5)], df['date'].iloc[math.floor(nrows*7/10)], df['date'].iloc[math.floor(nrows*8/10)], df['date'].iloc[math.floor(nrows*9/10)], max_date}
 
+#resolver que selected dates vayan en orden y que al final cuando hace el filtro se haga efectivamente. linea 111
+
+df_dates=df['date'].sort_values().unique()
+nrows=len(df_dates)
+min_date = df_dates[0]
+max_date = df_dates[nrows-1]
+selected_dates = [min_date, df_dates[math.floor(nrows/10)], df_dates[math.floor(nrows*2/10)], df_dates[math.floor(nrows*3/10)], df_dates[math.floor(nrows*4/10)], df_dates[math.floor(nrows*5/10)], df_dates[math.floor(nrows*6/10)], df_dates[math.floor(nrows*7/10)], df_dates[math.floor(nrows*8/10)], df_dates[math.floor(nrows*9/10)], max_date]
+print(df_dates)
+print(selected_dates)
 markdown_text = '''
 ### Some references
 - [Dash HTML Components](https://dash.plotly.com/dash-html-components)
@@ -34,10 +39,6 @@ markdown_text = '''
 - [Dash Bootstrap Components](https://dash-bootstrap-components.opensource.faculty.ai/docs/components/) 
 - [Dash DataTable](https://dash.plotly.com/datatable)  
 '''
-
-#def slider_map(min, max, steps=10):
- #   scale = np.logspace(np.log10(min), np.log10(max), steps, endpoint=False)
-  #  return {i/10: '{}'.format(round(scale[i],2)) for i in range(steps)}
 
 table_tab = dash_table.DataTable(
                 id='my-table',
