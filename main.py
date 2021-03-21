@@ -17,6 +17,8 @@ df_url = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/dat
 df = pd.read_csv(df_url).dropna(subset = ['location'])
 df=df.drop(['iso_code','total_vaccinations_per_hundred','people_vaccinated_per_hundred'], axis=1)
 
+#df=df.dropna(axis=0)
+
 df_location = df['location'].sort_values().unique()
 opt_location = [{'label':x, 'value':x} for x in df_location]
 # Discrete Colors in Python
@@ -107,7 +109,6 @@ def update_graph(data, tab):
     if tab != 'tab-g':
         return None
     dff = pd.read_json(data, orient='split')
-    dff["location"] = df["location"].astype(str)
     return px.scatter(dff, x="date", y="total_vaccinations", color="location")
 
 @app.callback(Output('data', 'children'), 
@@ -129,9 +130,10 @@ def filter(range, values):
 def dataRange(values):
     filter = df['location'].isin(values) 
     dff = df[filter]
-    min_date = min(dff['date'].dropna())
-    max_date = max(dff['date'].dropna())
-    return json.dumps({'min_date': min_date, 'max_date': max_date})
+    dff_dates = dff['date'].sort_values().unique()
+    min_dates = dff_dates[0]
+    max_dates = dff_dates[len(dff_dates) - 1]
+    return json.dumps({'min_date': min_dates, 'max_date': max_dates})
 
 if __name__ == '__main__':
     app.server.run(debug=True)
