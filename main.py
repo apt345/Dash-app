@@ -15,7 +15,7 @@ import json
 
 df_url = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations.csv'
 df = pd.read_csv(df_url).dropna(subset = ['location'])
-df=df.drop('iso_code', axis=1)
+df=df.drop(['iso_code','total_vaccinations_per_hundred','people_vaccinated_per_hundred'], axis=1)
 
 df_location = df['location'].sort_values().unique()
 opt_location = [{'label':x, 'value':x} for x in df_location]
@@ -30,8 +30,12 @@ nrows=len(df_dates)
 min_date = df_dates[0]
 max_date = df_dates[nrows-1]
 selected_dates = [min_date, df_dates[math.floor(nrows/10)], df_dates[math.floor(nrows*2/10)], df_dates[math.floor(nrows*3/10)], df_dates[math.floor(nrows*4/10)], df_dates[math.floor(nrows*5/10)], df_dates[math.floor(nrows*6/10)], df_dates[math.floor(nrows*7/10)], df_dates[math.floor(nrows*8/10)], df_dates[math.floor(nrows*9/10)], max_date]
-print(df_dates)
-print(selected_dates)
+#print(df_dates)
+#print(selected_dates)
+
+#make dates dataframe accessible by index
+
+
 markdown_text = '''
 ### Some references
 - [Dash HTML Components](https://dash.plotly.com/dash-html-components)
@@ -58,9 +62,9 @@ app.layout= html.Div([
         ]),
         html.Label(["Range of dates:",
                  dcc.RangeSlider(id="range",
-                     max= 1,
+                     max= 10,
                      min= 0,
-                     step= 1/100,
+                     step= 1/10,
                      marks= selected_dates,
                      value= [0,1],
                  )
@@ -110,7 +114,10 @@ def update_graph(data, tab):
     Input('range', 'value'), 
     State('my-dropdown', 'value'))
 def filter(range, values):
-     filter = df['location'].isin(values) & df['date'].between(min_date * (max_date/min_date) ** range[0], min_date * (max_date/min_date) ** range[1])
+     #filter by location given in values selector and in dates from range0 and range[1]
+     #keep in mind range is between 0 (start of df_dates) and 10 (end of df_dates)
+
+     filter = df['location'].isin(values) & df['date'].between(df_dates[math.floor(range[0]*(nrows-1)/10)], df_dates[math.floor(range[1]*(nrows-1)/10)])
 
      # more generally, this line would be
      # json.dumps(cleaned_df)
