@@ -17,7 +17,7 @@ df_url = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/dat
 df = pd.read_csv(df_url).dropna(subset = ['location'])
 df=df.drop(['iso_code','total_vaccinations_per_hundred','people_vaccinated_per_hundred'], axis=1)
 
-#df=df.dropna(axis=0)
+df=df.dropna(axis=0)
 
 df_location = df['location'].sort_values().unique()
 opt_location = [{'label':x, 'value':x} for x in df_location]
@@ -25,25 +25,21 @@ opt_location = [{'label':x, 'value':x} for x in df_location]
 # https://plotly.com/python/discrete-color/
 #col_location = {x: px.colors.qualitative.G10[i] for i,x in enumerate(df_location)}
 
-#resolver que selected dates vayan en orden y que al final cuando hace el filtro se haga efectivamente. linea 111
 
 df_dates=df['date'].sort_values().unique()
 nrows=len(df_dates)
 min_date = df_dates[0]
 max_date = df_dates[nrows-1]
 selected_dates = [min_date, df_dates[math.floor(nrows/10)], df_dates[math.floor(nrows*2/10)], df_dates[math.floor(nrows*3/10)], df_dates[math.floor(nrows*4/10)], df_dates[math.floor(nrows*5/10)], df_dates[math.floor(nrows*6/10)], df_dates[math.floor(nrows*7/10)], df_dates[math.floor(nrows*8/10)], df_dates[math.floor(nrows*9/10)], max_date]
-#print(df_dates)
-#print(selected_dates)
+
 
 #make dates dataframe accessible by index
 
 
 markdown_text = '''
-### Some references
-- [Dash HTML Components](https://dash.plotly.com/dash-html-components)
-- [Dash Core Components](https://dash.plotly.com/dash-core-components)  
-- [Dash Bootstrap Components](https://dash-bootstrap-components.opensource.faculty.ai/docs/components/) 
-- [Dash DataTable](https://dash.plotly.com/datatable)  
+### References
+- [COVID-19 information](https://www.who.int/es/emergencies/diseases/novel-coronavirus-2019/question-and-answers-hub/q-a-detail/coronavirus-disease-covid-19)
+- [Original data from OurWorldInData](https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations.csv)  
 '''
 
 table_tab = dash_table.DataTable(
@@ -53,13 +49,39 @@ table_tab = dash_table.DataTable(
 
 graph_tab = dcc.Graph(id="my-graph")
 
+tab_style_Arturo = {
+    'borderBottom': '1px solid #d6d6d6',
+    'fontWeight': 'bold',
+    'backgroundColor': 'red'
+}
+
+tab_style_Guille = {
+    'borderBottom': '1px solid #d6d6d6',
+    'fontWeight': 'bold',
+    'backgroundColor': 'blue'
+}
+
+tab_selected_style_Arturo = {
+    'borderTop': '1px solid #d6d6d6',
+    'borderBottom': '1px solid #d6d6d6',
+    'backgroundColor': 'red',
+    'color': 'white'
+}
+
+tab_selected_style_Guille = {
+    'borderTop': '1px solid #d6d6d6',
+    'borderBottom': '1px solid #d6d6d6',
+    'backgroundColor': 'blue',
+    'color': 'white'
+}
+
 app.layout= html.Div([
     html.Div([html.H1(app.title, className="app-header--title")],
         className= "app-header",
     ),
     html.Div([  
         dcc.Markdown(markdown_text),
-        html.Label(["Select countries:",
+        html.Label(["Select countries/continents:",
             dcc.Dropdown('my-dropdown', options= opt_location, value= [opt_location[0]['value']], multi=True)
         ]),
         html.Label(["Range of dates:",
@@ -74,8 +96,10 @@ app.layout= html.Div([
         html.Div(id='data', style={'display': 'none'}),
         html.Div(id='dataRange', style={'display': 'none'}),
         dcc.Tabs(id="tabs", value='tab-t', children=[
-            dcc.Tab(label='Table', value='tab-t'),
-            dcc.Tab(label='Graph', value='tab-g'),
+            dcc.Tab(label='Table Covid', value='tab-t', style=tab_style_Arturo, selected_style=tab_selected_style_Arturo),
+            dcc.Tab(label='Graph Covid', value='tab-g', style=tab_style_Arturo, selected_style=tab_selected_style_Arturo),
+            dcc.Tab(label='Table Guille', value='tab-t-2', style=tab_style_Guille, selected_style=tab_selected_style_Guille),
+            dcc.Tab(label='Graph Guille', value='tab-g-2', style=tab_style_Guille, selected_style=tab_selected_style_Guille),
         ]),
         html.Div(id='tabs-content')
     ],
