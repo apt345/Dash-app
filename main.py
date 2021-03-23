@@ -34,8 +34,21 @@ min_date = df_dates[0]
 max_date = df_dates[nrows-1]
 selected_dates = [min_date, df_dates[math.floor(nrows/10)], df_dates[math.floor(nrows*2/10)], df_dates[math.floor(nrows*3/10)], df_dates[math.floor(nrows*4/10)], df_dates[math.floor(nrows*5/10)], df_dates[math.floor(nrows*6/10)], df_dates[math.floor(nrows*7/10)], df_dates[math.floor(nrows*8/10)], df_dates[math.floor(nrows*9/10)], max_date]
 
+
+
+# Selection for Guille
+
+df_guille = [0,1]
+opt_guille = [{'label':x, 'value':x} for x in df_guille]
+
+
 #References and descriptive text
 markdown_text = '''
+### Description
+This app describes two datasets with interactive options for both of them.
+- Covid vaccinations: Information about country and date of your choice
+- Guille pon aqui tus cosas
+
 ### References
 - [COVID-19 information](https://www.who.int/es/emergencies/diseases/novel-coronavirus-2019/question-and-answers-hub/q-a-detail/coronavirus-disease-covid-19)
 - [Original data from OurWorldInData](https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations.csv)  
@@ -99,6 +112,9 @@ app.layout= html.Div([
         ]),
         html.Div(id='data', style={'display': 'none'}),
         html.Div(id='dataRange', style={'display': 'none'}),
+        html.Label(["Select between 0 and 1 for Guille:",
+            dcc.Dropdown('guille-dropdown', options= opt_guille, value= [opt_guille[0]['value']], multi=False)
+        ]),
         dcc.Tabs(id="tabs", value='tab-t', children=[
             dcc.Tab(label='Table Covid', value='tab-t', style=tab_style_Arturo, selected_style=tab_selected_style_Arturo),
             dcc.Tab(label='Graph Covid', value='tab-g', style=tab_style_Arturo, selected_style=tab_selected_style_Arturo),
