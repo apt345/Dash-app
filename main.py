@@ -71,8 +71,10 @@ data['label'] = np.where(data['label'] == ' >50K', 1, 0)
 #########################################3
 
 # Selection for Guille
-opt_guille = [{'label':'Less than 50K', 'value':0},
-              {'label':'More than 50K', 'value':1}]
+opt_label = [{'label':'Less than 50K', 'value':0},
+             {'label':'More than 50K', 'value':1}]
+
+opt_var = [{'label':col, 'value':col} for col in data.columns]
 
 
 #References and descriptive text
@@ -102,6 +104,9 @@ table_tab2 = dash_table.DataTable(
 #Covid graph
 graph_tab = dcc.Graph(id="my-graph")
 
+#Covid graph
+graph_tab2 = dcc.Graph(id="my-graph2")
+
 #Set tabs corresponding to covid analysis in red
 tab_style_Arturo = {
     'borderBottom': '1px solid #d6d6d6',
@@ -130,16 +135,32 @@ tab_selected_style_Guille = {
     'color': 'white'
 }
 
+#app = dash.Dash(external_stylesheets=[dbc.themes.MINTY])
+
 #define the app layout
 app.layout= html.Div([
+
     html.Div([html.H1(app.title, className="app-header--title")],
-             className= "app-header",
-             ),
+             className= "app-header"
+    ),
+
     html.Div([
-        dcc.Markdown(markdown_text),
+        html.Div(id='data', style={'display': 'none'}),
+        html.Div(id='data2', style={'display': 'none'})
+    ]),
+
+    dcc.Markdown(markdown_text),
+    html.Br(),
+
+    html.H2('COVID Dataset Parameters'),
+    html.Div([
+
         html.Label(["Select countries/continents for Covid analysis:",
                     dcc.Dropdown('my-dropdown', options= opt_location, value= [opt_location[0]['value']], multi=True)
                     ]),
+
+        html.Br(),
+
         html.Label(["Range of dates for Covid analysis:",
                     dcc.RangeSlider(id="range",
                                     max= 10,
@@ -149,24 +170,46 @@ app.layout= html.Div([
                                     value= [0,1],
                                     )
                     ]),
-        html.Div(id='data', style={'display': 'none'}),
-        html.Div(id='dataRange', style={'display': 'none'}),
+
+        html.Div(id='dataRange', style={'display': 'none'})
+    ]),
+
+    html.Br(),
+
+    html.H2('Adult Income Dataset Parameters'),
+    html.Div([
+
         html.Label(["Select the income range(s):",
                     dcc.Checklist(
-                        options=opt_guille,
+                        id='checkbox',
+                        options=opt_label,
                         value=0
-                    )
-                    ]),
+                    )]),
+
+        html.Br(),
+
+        html.Label(["Select the variable:",
+                    dcc.Dropdown(
+                        'my-dropdown2',
+                        options=opt_var,
+                        value='age'
+                    )]),
+    ]),
+
+    html.Br(),
+    html.Br(),
+
+    html.Div([
         dcc.Tabs(id="tabs", value='tab-t', children=[
             dcc.Tab(label='Table Covid', value='tab-t', style=tab_style_Arturo, selected_style=tab_selected_style_Arturo),
             dcc.Tab(label='Graph Covid', value='tab-g', style=tab_style_Arturo, selected_style=tab_selected_style_Arturo),
-            dcc.Tab(label='Table Guille', value='tab-t-2', style=tab_style_Guille, selected_style=tab_selected_style_Guille),
-            dcc.Tab(label='Graph Guille', value='tab-g-2', style=tab_style_Guille, selected_style=tab_selected_style_Guille),
-        ]),
+            dcc.Tab(label='Table Income', value='tab-t2', style=tab_style_Guille, selected_style=tab_selected_style_Guille),
+            dcc.Tab(label='Graph Income', value='tab-g2', style=tab_style_Guille, selected_style=tab_selected_style_Guille)
+        ]),#children, Tabs
         html.Div(id='tabs-content')
     ],
-        className= "app-body")
-])
+        className= "app-body") #div
+    ])
 
 @app.callback(Output('tabs-content', 'children'),
               Input('tabs', 'value'))
@@ -175,8 +218,12 @@ def render_content(tab):
         return table_tab
     elif tab == 'tab-g':
         return graph_tab
+    elif tab == 'tab-t2':
+        return table_tab2
+    elif tab == 'tab-g2':
+        return graph_tab2
 
-
+###ARTURO###
 @app.callback(
     Output('my-table', 'data'),
     Input('data', 'children'),
@@ -203,7 +250,6 @@ def update_graph(data, tab):
 def filter(range, values):
     #filter by location given in values selector and in dates from range0 and range[1]
     #keep in mind range is between 0 (start of df_dates) and 10 (end of df_dates)
-
     filter = df['location'].isin(values) & df['date'].between(df_dates[math.floor(range[0]*(nrows-1)/10)], df_dates[math.floor(range[1]*(nrows-1)/10)])
     return df[filter].to_json(date_format='iso', orient='split')
 
@@ -217,6 +263,46 @@ def dataRange(values):
     min_dates = dff_dates[0]
     max_dates = dff_dates[len(dff_dates) - 1]
     return json.dumps({'min_date': min_dates, 'max_date': max_dates})
+######
+
+###GUILLE###
+@app.callback(
+    Output('my-table2', 'data'),
+    Input('data2', 'children'),
+    State('tabs', 'value'))
+def update_table(data, tab):
+    if tab != 'tab-t2':
+        return None
+    dff = pd.read_json(data, orient='split')
+    return dff.to_dict("records")
+
+@app.callback(
+    Output('my-graph2', 'figure'),
+    Input('data', 'children'),
+    State('tabs', 'value'))
+def update_graph(data, tab):
+    if tab != 'tab-g2':
+        return None
+    dff = pd.read_json(data, orient='split')
+    return px.scatter(dff, x="date", y="total_vaccinations", color="location")
+
+@app.callback(Output('data2graph', 'children'),
+              Input('checkbox', 'value'),
+              Input('my-dropdown2', 'value'))
+def filter2graph(label, variable):
+    filter = data['label'].isin(label)
+    #select = variable
+    return data[filter, variable].to_json(date_format='iso', orient='split')
+
+
+@app.callback(Output('data2', 'children'),
+              Input('checkbox', 'value'))
+def filter2(label):
+    filter = data['label'].isin(label)
+    return data[filter].to_json(date_format='iso', orient='split')
+######
+
+
 
 if __name__ == '__main__':
     app.server.run(debug=True)
