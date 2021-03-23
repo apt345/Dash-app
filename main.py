@@ -246,7 +246,7 @@ def update_graph(data, tab):
 
 @app.callback(Output('data', 'children'),
               Input('range', 'value'),
-              State('my-dropdown', 'value'))
+              Input('my-dropdown', 'value'))
 def filter(range, values):
     #filter by location given in values selector and in dates from range0 and range[1]
     #keep in mind range is between 0 (start of df_dates) and 10 (end of df_dates)
