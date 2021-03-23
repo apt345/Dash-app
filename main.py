@@ -171,7 +171,7 @@ app.layout= html.Div([
                                     )
                     ]),
 
-        html.Div(id='dataRange', style={'display': 'none'})
+        html.Div(id='dataRange')
     ]),
 
     html.Br(),
@@ -255,14 +255,10 @@ def filter(range, values):
 
 
 @app.callback(Output('dataRange', 'children'),
-              Input('my-dropdown', 'value'))
-def dataRange(values):
-    filter = df['location'].isin(values)
-    dff = df[filter]
-    dff_dates = dff['date'].sort_values().unique()
-    min_dates = dff_dates[0]
-    max_dates = dff_dates[len(dff_dates) - 1]
-    return json.dumps({'min_date': min_dates, 'max_date': max_dates})
+              Input('range', 'value'))
+def dataRange(range):
+    return json.dumps({'Minimum_selected_date': df_dates[math.floor(range[0]*(nrows-1)/10)], 'Maximum_selected_date': df_dates[math.floor(range[1]*(nrows-1)/10)]})
+
 ######
 
 ###GUILLE###
