@@ -13,53 +13,56 @@ import numpy as np
 import pandas as pd
 import json
 
+
+#loading the covid dataset
 df_url = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations.csv'
 df = pd.read_csv(df_url).dropna(subset = ['location'])
+#drop some unnecessary columns
 df=df.drop(['iso_code','total_vaccinations_per_hundred','people_vaccinated_per_hundred'], axis=1)
-
+#clean of empty dates
 df=df.dropna(axis=0)
 
+#find the sorted list of location/countries in alphabetical order
 df_location = df['location'].sort_values().unique()
 opt_location = [{'label':x, 'value':x} for x in df_location]
-# Discrete Colors in Python
-# https://plotly.com/python/discrete-color/
-#col_location = {x: px.colors.qualitative.G10[i] for i,x in enumerate(df_location)}
 
-
+#find the sorted list of dates in chronological order
 df_dates=df['date'].sort_values().unique()
+#create a range of dates uniformly distributed
 nrows=len(df_dates)
 min_date = df_dates[0]
 max_date = df_dates[nrows-1]
 selected_dates = [min_date, df_dates[math.floor(nrows/10)], df_dates[math.floor(nrows*2/10)], df_dates[math.floor(nrows*3/10)], df_dates[math.floor(nrows*4/10)], df_dates[math.floor(nrows*5/10)], df_dates[math.floor(nrows*6/10)], df_dates[math.floor(nrows*7/10)], df_dates[math.floor(nrows*8/10)], df_dates[math.floor(nrows*9/10)], max_date]
 
-
-#make dates dataframe accessible by index
-
-
+#References and descriptive text
 markdown_text = '''
 ### References
 - [COVID-19 information](https://www.who.int/es/emergencies/diseases/novel-coronavirus-2019/question-and-answers-hub/q-a-detail/coronavirus-disease-covid-19)
 - [Original data from OurWorldInData](https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations.csv)  
 '''
 
+#Covid table
 table_tab = dash_table.DataTable(
                 id='my-table',
                 columns=[{"name": i, "id": i} for i in df.columns]
             )
 
+#Covid graph
 graph_tab = dcc.Graph(id="my-graph")
 
+#Set tabs corresponding to covid analysis in red
 tab_style_Arturo = {
     'borderBottom': '1px solid #d6d6d6',
     'fontWeight': 'bold',
     'backgroundColor': 'red'
 }
-
+#Set tabs corresponding to guille's analysis in blue
 tab_style_Guille = {
     'borderBottom': '1px solid #d6d6d6',
     'fontWeight': 'bold',
     'backgroundColor': 'blue'
 }
+#Set that when a tab is selected, it maintains its color but the letter changes to white for Covid and guille's tabs
 
 tab_selected_style_Arturo = {
     'borderTop': '1px solid #d6d6d6',
@@ -75,16 +78,17 @@ tab_selected_style_Guille = {
     'color': 'white'
 }
 
+#define the app layout
 app.layout= html.Div([
     html.Div([html.H1(app.title, className="app-header--title")],
         className= "app-header",
     ),
     html.Div([  
         dcc.Markdown(markdown_text),
-        html.Label(["Select countries/continents:",
+        html.Label(["Select countries/continents for Covid analysis:",
             dcc.Dropdown('my-dropdown', options= opt_location, value= [opt_location[0]['value']], multi=True)
         ]),
-        html.Label(["Range of dates:",
+        html.Label(["Range of dates for Covid analysis:",
                  dcc.RangeSlider(id="range",
                      max= 10,
                      min= 0,
@@ -143,9 +147,6 @@ def filter(range, values):
      #keep in mind range is between 0 (start of df_dates) and 10 (end of df_dates)
 
      filter = df['location'].isin(values) & df['date'].between(df_dates[math.floor(range[0]*(nrows-1)/10)], df_dates[math.floor(range[1]*(nrows-1)/10)])
-
-     # more generally, this line would be
-     # json.dumps(cleaned_df)
      return df[filter].to_json(date_format='iso', orient='split')
 
 
