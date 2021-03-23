@@ -82,7 +82,7 @@ opt_var = [{'label':col, 'value':col} for col in data.columns]
 markdown_text = '''
 ### Description
 This app describes two datasets with interactive options for both of them.
-- Covid vaccinations: Information about country and date of your choice.
+- Covid vaccinations: Information about covid vaccinations for the countries and dates of your choice.
 - Adult Income: Data from and US Income Census, which classifies individuals in smaller or larger than US$ 50K anual income.
 ### References
 - [COVID-19 information] (https://www.who.int/es/emergencies/diseases/novel-coronavirus-2019/question-and-answers-hub/q-a-detail/coronavirus-disease-covid-19)
@@ -173,7 +173,7 @@ app.layout= html.Div([
                                     )
                     ]),
 
-        html.Div(id='dataRange', style={'display': 'none'})
+        html.Div(id='dataRange')
     ]),
 
     html.Br(),
@@ -248,7 +248,7 @@ def update_graph(data, tab):
 
 @app.callback(Output('data', 'children'),
               Input('range', 'value'),
-              State('my-dropdown', 'value'))
+              Input('my-dropdown', 'value'))
 def filter(range, values):
     #filter by location given in values selector and in dates from range0 and range[1]
     #keep in mind range is between 0 (start of df_dates) and 10 (end of df_dates)
@@ -256,15 +256,12 @@ def filter(range, values):
     return df[filter].to_json(date_format='iso', orient='split')
 
 
+
 @app.callback(Output('dataRange', 'children'),
-              Input('my-dropdown', 'value'))
-def dataRange(values):
-    filter = df['location'].isin(values)
-    dff = df[filter]
-    dff_dates = dff['date'].sort_values().unique()
-    min_dates = dff_dates[0]
-    max_dates = dff_dates[len(dff_dates) - 1]
-    return json.dumps({'min_date': min_dates, 'max_date': max_dates})
+              Input('range', 'value'))
+def dataRange(range):
+    return json.dumps({'Minimum_selected_date': df_dates[math.floor(range[0]*(nrows-1)/10)], 'Maximum_selected_date': df_dates[math.floor(range[1]*(nrows-1)/10)]})
+
 ######
 
 ###GUILLE###
