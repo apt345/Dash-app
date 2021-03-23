@@ -3,6 +3,7 @@ from dash.dependencies import Input, Output, State
 import dash_html_components as html
 import dash_core_components as dcc
 import plotly.express as px
+import plotly.figure_factory as ff
 import dash_bootstrap_components as dbc
 import dash_table
 
@@ -146,7 +147,8 @@ app.layout= html.Div([
 
     html.Div([
         html.Div(id='data', style={'display': 'none'}),
-        html.Div(id='data2', style={'display': 'none'})
+        html.Div(id='data2', style={'display': 'none'}),
+        html.Div(id='data2graph', style={'display': 'none'})
     ]),
 
     dcc.Markdown(markdown_text),
@@ -171,7 +173,7 @@ app.layout= html.Div([
                                     )
                     ]),
 
-        html.Div(id='dataRange')
+        html.Div(id='dataRange', style={'display': 'none'})
     ]),
 
     html.Br(),
@@ -246,7 +248,7 @@ def update_graph(data, tab):
 
 @app.callback(Output('data', 'children'),
               Input('range', 'value'),
-              Input('my-dropdown', 'value'))
+              State('my-dropdown', 'value'))
 def filter(range, values):
     #filter by location given in values selector and in dates from range0 and range[1]
     #keep in mind range is between 0 (start of df_dates) and 10 (end of df_dates)
@@ -255,10 +257,14 @@ def filter(range, values):
 
 
 @app.callback(Output('dataRange', 'children'),
-              Input('range', 'value'))
-def dataRange(range):
-    return json.dumps({'Minimum_selected_date': df_dates[math.floor(range[0]*(nrows-1)/10)], 'Maximum_selected_date': df_dates[math.floor(range[1]*(nrows-1)/10)]})
-
+              Input('my-dropdown', 'value'))
+def dataRange(values):
+    filter = df['location'].isin(values)
+    dff = df[filter]
+    dff_dates = dff['date'].sort_values().unique()
+    min_dates = dff_dates[0]
+    max_dates = dff_dates[len(dff_dates) - 1]
+    return json.dumps({'min_date': min_dates, 'max_date': max_dates})
 ######
 
 ###GUILLE###
@@ -274,22 +280,29 @@ def update_table(data, tab):
 
 @app.callback(
     Output('my-graph2', 'figure'),
-    Input('data', 'children'),
+    Input('data2graph', 'children'),
+    Input('my-dropdown2', 'value'),
     State('tabs', 'value'))
-def update_graph(data, tab):
+def update_graph(data, var, tab):
     if tab != 'tab-g2':
         return None
     dff = pd.read_json(data, orient='split')
-    return px.scatter(dff, x="date", y="total_vaccinations", color="location")
+    if var in ['age', 'hours_week']:
+        hist_data = [dff['age']]
+        group_labels = ['Less than 50K', 'More than 50K']
+        return
+    elif var in ['workclass', 'education', 'race', 'sex']:
+        return px.bar(dff, x=var, y='count', color="label", title='Barplot')
+    else:
+        return None
 
 @app.callback(Output('data2graph', 'children'),
               Input('checkbox', 'value'),
               Input('my-dropdown2', 'value'))
 def filter2graph(label, variable):
-    filter = data['label'].isin(label)
-    #select = variable
-    return data[filter, variable].to_json(date_format='iso', orient='split')
-
+    filtered = data[data['label'].isin(label)]
+    filtered_selected = filtered[[variable, 'label']]
+    return filtered_selected.to_json(date_format='iso', orient='split')
 
 @app.callback(Output('data2', 'children'),
               Input('checkbox', 'value'))
