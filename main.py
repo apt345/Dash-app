@@ -112,27 +112,27 @@ graph_tab2 = dcc.Graph(id="my-graph2")
 tab_style_Arturo = {
     'borderBottom': '1px solid #d6d6d6',
     'fontWeight': 'bold',
-    'backgroundColor': 'red'
+    'backgroundColor': 'white'
 }
 #Set tabs corresponding to guille's analysis in blue
 tab_style_Guille = {
     'borderBottom': '1px solid #d6d6d6',
     'fontWeight': 'bold',
-    'backgroundColor': 'blue'
+    'backgroundColor': 'white'
 }
 #Set that when a tab is selected, it maintains its color but the letter changes to white for Covid and guille's tabs
 
 tab_selected_style_Arturo = {
     'borderTop': '1px solid #d6d6d6',
     'borderBottom': '1px solid #d6d6d6',
-    'backgroundColor': 'red',
+    'backgroundColor': 'Maroon',
     'color': 'white'
 }
 
 tab_selected_style_Guille = {
     'borderTop': '1px solid #d6d6d6',
     'borderBottom': '1px solid #d6d6d6',
-    'backgroundColor': 'blue',
+    'backgroundColor': '#004d1a',
     'color': 'white'
 }
 
@@ -143,7 +143,7 @@ app.layout= html.Div([
 
     html.Div([html.H1(app.title, className="app-header--title")],
              className= "app-header"
-    ),
+             ),
 
     html.Div([
         html.Div(id='data', style={'display': 'none'}),
@@ -211,7 +211,7 @@ app.layout= html.Div([
         html.Div(id='tabs-content')
     ],
         className= "app-body") #div
-    ])
+])
 
 @app.callback(Output('tabs-content', 'children'),
               Input('tabs', 'value'))
@@ -261,7 +261,6 @@ def filter(range, values):
               Input('range', 'value'))
 def dataRange(range):
     return json.dumps({'Minimum_selected_date': df_dates[math.floor(range[0]*(nrows-1)/10)], 'Maximum_selected_date': df_dates[math.floor(range[1]*(nrows-1)/10)]})
-
 ######
 
 ###GUILLE###
@@ -269,7 +268,7 @@ def dataRange(range):
     Output('my-table2', 'data'),
     Input('data2', 'children'),
     State('tabs', 'value'))
-def update_table(data, tab):
+def update_table2(data, tab):
     if tab != 'tab-t2':
         return None
     dff = pd.read_json(data, orient='split')
@@ -279,17 +278,34 @@ def update_table(data, tab):
     Output('my-graph2', 'figure'),
     Input('data2graph', 'children'),
     Input('my-dropdown2', 'value'),
+    Input('checkbox', 'value'),
     State('tabs', 'value'))
-def update_graph(data, var, tab):
+def update_graph2(data, var, lab, tab):
     if tab != 'tab-g2':
         return None
     dff = pd.read_json(data, orient='split')
-    if var in ['age', 'hours_week']:
-        hist_data = [dff['age']]
-        group_labels = ['Less than 50K', 'More than 50K']
-        return
-    elif var in ['workclass', 'education', 'race', 'sex']:
-        return px.bar(dff, x=var, y='count', color="label", title='Barplot')
+
+    col = 'green'
+    if lab == 0:
+        col = '#007acc'
+    elif lab == 1:
+        col = '#b30047'
+    else:
+        col = '#2929a3'
+
+    if var in ('age', 'hours_week'):
+        hist_data = [dff[var]]
+        group_labels = [var]
+        title = [var, 'Histogram/Density For Adult Income Dataset']
+        fig = ff.create_distplot(hist_data, group_labels)
+        fig.update_layout(title_text=" ".join(title))
+        return fig
+    elif var in ('workclass', 'education', 'race', 'sex'):
+        s = dff[var].value_counts()
+        dfff = pd.DataFrame({'Variable':s.index, 'Count':s.values})
+        title = [var, 'Barplot For Adult Income Dataset']
+        fig = px.bar(dfff, x='Variable', y='Count', title=" ".join(title))
+        return fig
     else:
         return None
 
@@ -312,3 +328,5 @@ def filter2(label):
 
 if __name__ == '__main__':
     app.server.run(debug=True)
+
+
